@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIKpay – Payment Calculator</title>
+
+<style>
+:root{
+  --blue:#4A90C9;
+  --yellow:#FFD400;
+  --dark:#1f2a37;
+  --light:#f5f7fa;
+  --gray:#e3e3e3;
+  --input-bg:#ffffff;
+}
+
+/* RESET & BASE */
+*{box-sizing:border-box;font-family:system-ui,Segoe UI,sans-serif}
+body{margin:0;background:var(--light);padding-bottom:160px;}
+.header{
+  background:var(--blue);
+  padding:14px 16px;
+  display:flex;
+  justify-content:center; /* tengah horizontal */
+  align-items:center;     /* tengah vertikal */
+}
+
+.header img{
+  width:70%;
+  max-width:220px; /* supaya tidak kebesaran di layar lebar */
+  height:auto;
+  object-fit:contain;
+}
+
+/* CONTAINER */
+.container{padding:16px;}
+
+/* LABEL & INPUT */
+label{display:block;margin-top:14px;font-weight:600;color:var(--dark);}
+input,select{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:12px;
+  border:1px solid var(--gray);
+  font-size:15px;
+  background:var(--input-bg);
+  transition:.3s;
+}
+input:focus,select:focus{border-color:var(--blue);outline:none;box-shadow:0 0 6px rgba(74,144,201,.4);}
+
+/* COLORFUL DROPDOWN */
+select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:linear-gradient(45deg,var(--yellow) 50%, transparent 50%), linear-gradient(135deg,var(--yellow) 50%, transparent 50%), linear-gradient(to right, var(--gray), var(--gray));
+  background-position: calc(100% - 20px) calc(50% - 5px), calc(100% - 15px) calc(50% - 5px), 100% 0;
+  background-size:5px 5px,5px 5px,1px 1px;
+  background-repeat:no-repeat;
+  cursor:pointer;
+}
+
+/* HIDDEN FIELD */
+.hidden{display:none;transition:.3s;}
+
+/* FIXED CALCULATOR */
+.calculator{
+  position:fixed;bottom:0;left:0;right:0;
+  background:white;
+  border-top:2px solid var(--blue);
+  padding:16px;
+  box-shadow:0 -10px 30px rgba(0,0,0,.15);
+  display:flex;flex-direction:column;gap:6px;
+}
+.price{font-size:28px;font-weight:700;color:var(--blue);}
+.note{font-size:13px;color:#555;}
+button{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+  border:none;
+  border-radius:12px;
+  background:var(--yellow);
+  font-weight:700;
+  cursor:pointer;
+}
+button:hover{opacity:.9;}
+button:active{opacity:.8;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <img src="https://i.ibb.co/hJksP4Pq/Picsart-26-01-13-18-33-26-983.png" alt="KLIKpay Logo"></header>
+
+<div class="container">
+
+<label>Pilih Layanan</label>
+<select id="layanan">
+  <option value="">-- Pilih --</option>
+  <option value="pulsa">Pulsa</option>
+  <option value="wifi">Wifi</option>
+  <option value="telpon">Telpon Ardhy</option>
+</select>
+
+<!-- PULSA -->
+<div id="pulsa" class="hidden">
+  <label>Provider</label>
+  <select id="provider">
+    <option>WE Egypt</option>
+    <option>Vodafone</option>
+    <option>Orange</option>
+    <option>Etisalat</option>
+  </select>
+
+  <label>Nomor HP</label>
+  <input id="hp" placeholder="01500310412">
+
+  <label>Nominal Dakhil</label>
+  <input type="number" id="dakhil" min="15" max="1000" placeholder="15 – 1000">
+</div>
+
+<!-- WIFI -->
+<div id="wifi" class="hidden">
+  <label>Jenis Wifi</label>
+  <select id="wifiType">
+    <option value="">-- Pilih --</option>
+    <option value="idhofi">Idhofi (WE)</option>
+    <option value="tajdid">Tajdid</option>
+  </select>
+
+  <!-- IDHOFI -->
+  <div id="idhofi" class="hidden">
+    <label>Package</label>
+    <select id="paket">
+      <option value="26000">20 GB</option>
+      <option value="52000">50 GB</option>
+      <option value="82000">100 GB</option>
+      <option value="194000">400 GB</option>
+      <option value="745000">2000 GB</option>
+    </select>
+
+    <label>Nomor Wifi</label>
+    <input id="wifiNo">
+  </div>
+
+  <!-- TAJDID -->
+  <div id="tajdid" class="hidden">
+    <label>Provider</label>
+    <select id="tajdidProvider">
+      <option>WE Egypt</option>
+      <option>Etisalat</option>
+      <option>Vodafone</option>
+      <option>Orange</option>
+    </select>
+
+    <label>Nomor Wifi</label>
+    <input id="wifiNo2">
+  </div>
+</div>
+
+<!-- TELPON -->
+<div id="telpon" class="hidden">
+  <label>Nomor Wifi / Telepon</label>
+  <input id="telpNo">
+</div>
+
+</div>
+
+<!-- FIXED CALCULATOR -->
+<div class="calculator">
+  <div class="price" id="harga">Rp 0</div>
+  <div class="note" id="note">Isi form untuk melihat harga</div>
+  <button onclick="kirimWA()">Kirim Order WhatsApp</button>
+</div>
+
+<script>
+// ELEMENTS
+const layanan=document.getElementById("layanan");
+const hargaEl=document.getElementById("harga");
+const noteEl=document.getElementById("note");
+
+// SHOW / HIDE FORM
+layanan.onchange=()=>{
+  ["pulsa","wifi","telpon"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+  if(layanan.value)document.getElementById(layanan.value).classList.remove("hidden");
+};
+
+// PULSA LOGIC
+function hitungPulsa(d){
+  let r=0;
+  if(d>=15&&d<=20)r=750;
+  else if(d>=25&&d<=60)r=620;
+  else if(d>=70&&d<=150)r=560;
+  else if(d>=200&&d<=1000)r=540;
+  else return 0;
+  return Math.round(d*r/500)*500;
+}
+
+dakhil.oninput=()=>{
+  const h=hitungPulsa(+dakhil.value);
+  hargaEl.innerText=h>0?"Rp "+h.toLocaleString("id-ID"):"Rp 0";
+  noteEl.innerText=h>0?"Pulsa "+dakhil.value+" Dakhil":"Nominal invalid";
+};
+
+// WIFI LOGIC
+wifiType.onchange=()=>{
+  idhofi.classList.add("hidden");
+  tajdid.classList.add("hidden");
+  if(wifiType.value==="idhofi")idhofi.classList.remove("hidden");
+  if(wifiType.value==="tajdid"){
+    tajdid.classList.remove("hidden");
+    hargaEl.innerText="Harga menyesuaikan tagihan";
+    noteEl.innerText="";
+  }
+};
+paket.onchange=()=>{
+  hargaEl.innerText="Rp "+(+paket.value).toLocaleString("id-ID");
+  noteEl.innerText="Wifi Idhofi";
+}
+
+// WHATSAPP ORDER
+function randomID(){ 
+  const letters="abcdefghijklmnopqrstuvwxyz";
+  const nums="0123456789";
+  return nums[Math.floor(Math.random()*10)]+nums[Math.floor(Math.random()*10)]+nums[Math.floor(Math.random()*10)]
+  +letters[Math.floor(Math.random()*26)]+letters[Math.floor(Math.random()*26)]+letters[Math.floor(Math.random()*26)];
+}
+
+function kirimWA(){
+  const id=randomID();
+  let msg=`*ORDER MASUK :*\n_KLIKpay-${id}_\n\n- *Service* : ${layanan.value}\n`;
+  
+  if(layanan.value==="pulsa"){
+    msg+=`- *Provider* : ${provider.value}\n- *Nomor* : ${hp.value}\n- *Nominal* : ${dakhil.value} Dakhil\n`;
+    msg+=`\n*_Tagihan : ${hargaEl.innerText}_*\n`;
+    msg+=`\n​💳 *TRANSFER ONLY :*`;
+    msg+=`\n- *Bank Jago S.* : 507465083316\n- *DANA* : 085880856341`;
+  }
+  else if(layanan.value==="wifi"){
+    if(wifiType.value==="idhofi"){
+      msg+=`- *Jenis Wifi* : Idhofi\n- *Package* : ${paket.options[paket.selectedIndex].text}\n- *Nomor* : ${wifiNo.value}\n`;
+      msg+=`\n*_Tagihan : ${hargaEl.innerText}_*\n`;
+      msg+=`\n​💳 *TRANSFER ONLY :*`;
+      msg+=`\n- *Bank Jago S.* : 507465083316\n- *DANA* : 085880856341`;
+    } else if(wifiType.value==="tajdid"){
+      msg+=`- *Jenis Wifi* : Tajdid\n- *Provider* : ${tajdidProvider.value}\n- *Nomor* : ${wifiNo2.value}\n`;
+      msg+=`\n*_Tagihan : Harga menyesuaikan tagihan_*\n`;
+      msg+=`\n​💳 *TRANSFER ONLY :*`;
+      msg+=`\n- *Bank Jago S.* : 507465083316\n- *DANA* : 085880856341`;
+    }
+  }
+  else if(layanan.value==="telpon"){
+    msg+=`- *Nomor* : ${telpNo.value}\n`;
+    msg+=`\n*_Tagihan : Harga menyesuaikan tagihan_*\n`;
+    msg+=`\n​💳 *TRANSFER ONLY :*`;
+    msg+=`\n- *Bank Jago S.* : 507465083316\n- *DANA* : 085880856341`;
+  }
+
+  window.open("https://wa.me/6285880856341?text="+encodeURIComponent(msg),"_blank");
+}
+</script>
+
+</body>
+</html>
